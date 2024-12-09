@@ -2,7 +2,8 @@
 import { lusitana } from '@/app/ui/fonts';
 import {
   AtSymbolIcon,
-  KeyIcon
+  KeyIcon,
+  ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
@@ -68,8 +69,12 @@ export default function LoginForm() {
           Log in <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
         </Button>
         <div className="flex h-8 items-end space-x-1">
-          {/* Add form errors here */}
-        </div>
+        {errorMessage && (
+            <>
+              <ExclamationCircleIcon className="h-5 w-5 text-red-500" />
+              <p className="text-sm text-red-500">{errorMessage}</p>
+            </>
+          )}        </div>
       </div>
     </form>
   );
