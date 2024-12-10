@@ -101,14 +101,29 @@ async function seedRevenue() {
   return insertedRevenue;
 }
 
+async function alterUsersTable() {
+  await client.sql`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS admin BOOLEAN DEFAULT false;
+  `;
+
+  const hashedPassword = await bcrypt.hash('123456', 10);
+  await client.sql`
+    INSERT INTO users (name, email, password, admin)
+    VALUES ('admin', 'example@email.com', ${hashedPassword}, true)
+    ON CONFLICT (email) DO NOTHING;
+  `;
+}
+
 export async function GET() {
 
   try {
     await client.sql`BEGIN`;
-    await seedUsers();
-    await seedCustomers();
-    await seedInvoices();
-    await seedRevenue();
+    // await seedUsers();
+    // await seedCustomers();
+    // await seedInvoices();
+    // await seedRevenue();
+    await alterUsersTable();
     await client.sql`COMMIT`;
 
     return Response.json({ message: 'Database seeded successfully' });
