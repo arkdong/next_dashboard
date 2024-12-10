@@ -11,7 +11,8 @@ async function seedUsers() {
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       email TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL
+      password TEXT NOT NULL,
+      admin BOOLEAN DEFAULT FALSE
     );
   `;
 
@@ -101,31 +102,18 @@ async function seedRevenue() {
   return insertedRevenue;
 }
 
-async function alterUsersTable() {
-  await client.sql`
-    ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS admin BOOLEAN DEFAULT false;
-  `;
-
-  const hashedPassword = await bcrypt.hash('123456', 10);
-  await client.sql`
-    INSERT INTO users (name, email, password, admin)
-    VALUES ('admin', 'example@email.com', ${hashedPassword}, true)
-    ON CONFLICT (email) DO NOTHING;
-  `;
-}
 
 export async function GET() {
 
   try {
     await client.sql`BEGIN`;
-    await seedUsers();
-    await seedCustomers();
-    await seedInvoices();
-    await seedRevenue();
-    await alterUsersTable();
-    await client.sql`COMMIT`;
+    // await client.sql`DROP TABLE IF EXISTS users, invoices, customers, revenue CASCADE`;
+    // await seedUsers();
+    // await seedCustomers();
+    // await seedInvoices();
+    // await seedRevenue();
 
+    await client.sql`COMMIT`;
     return Response.json({ message: 'Database seeded successfully' });
   } catch (error) {
     await client.sql`ROLLBACK`;
