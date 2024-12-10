@@ -2,7 +2,6 @@
 
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, EllipsisHorizontalIcon } from '@heroicons/react/20/solid'
-import { useEffect, useState } from 'react'
 
 export default function Calendar() {
   const today = new Date()

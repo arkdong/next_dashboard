@@ -19,7 +19,6 @@ const CurrentDate = () => {
 
   return (
     <div>
-      <h1>Today's Date</h1>
       <p>{currentDate}</p>
     </div>
   );
