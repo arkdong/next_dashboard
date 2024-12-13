@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { db } from '@vercel/postgres';
-import { invoices, customers, revenue, users } from '../lib/placeholder-data';
+import { invoices, customers, revenue, users, courses } from '../lib/placeholder-data';
 
 const client = await db.connect();
 
@@ -102,6 +102,33 @@ async function seedRevenue() {
   return insertedRevenue;
 }
 
+async function seedCourses() {
+  await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await client.sql`
+    CREATE TABLE IF NOT EXISTS courses (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      course_number INT NOT NULL,
+      start_date DATE NOT NULL,
+      end_date DATE NOT NULL,
+      max_hours INT NOT NULL,
+      status VARCHAR(255) NOT NULL
+    );
+  `;
+
+  const insertedCourses = await Promise.all(
+    courses.map(
+      (course) => client.sql`
+        INSERT INTO courses (id, name, course_number, start_date, end_date, max_hours, status)
+        VALUES (${course.id}, ${course.name}, ${course.course_number}, ${course.start_date}, ${course.end_date}, ${course.max_hours}, ${course.status})
+        ON CONFLICT (id) DO NOTHING;
+      `,
+    ),
+  );
+
+  return insertedCourses;
+}
 
 export async function GET() {
 
@@ -112,7 +139,8 @@ export async function GET() {
     // await seedCustomers();
     // await seedInvoices();
     // await seedRevenue();
-
+    // await client.sql`DROP TABLE IF EXISTS courses CASCADE`;
+    await seedCourses();
     await client.sql`COMMIT`;
     return Response.json({ message: 'Database seeded successfully' });
   } catch (error) {

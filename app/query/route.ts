@@ -13,9 +13,18 @@ async function listInvoices() {
 	return data.rows;
 }
 
+async function listCourses() {
+  const data = await client.sql`
+  SELECT * FROM courses;
+  `;
+
+  return data.rows;
+}
+
 export async function GET() {
   try {
-  	return Response.json(await listInvoices());
+    return Response.json(await listCourses());
+  	// return Response.json(await listInvoices());
   } catch (error) {
   	return Response.json({ error }, { status: 500 });
   }

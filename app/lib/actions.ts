@@ -69,7 +69,10 @@ export async function createInvoice(prevState: State, formData: FormData) {
     // Revalidate the cache for the invoices page and redirect the user.
     revalidatePath('/admin/invoices');
     redirect('/admin/invoices');
-  }
+}
+
+
+
 
 // Use Zod to update the expected types
 const UpdateInvoice = FormSchema.omit({ id: true, date: true });
@@ -125,5 +128,115 @@ export async function authenticate(
       }
     }
     throw error;
+  }
+}
+
+const CourseFormSchema = z.object({
+  id: z.string(),
+  name: z.string()
+    .min(1, { message: 'Please enter a course name' }),
+  number: z.coerce
+    .number()
+    .min(1, { message: 'Please enter a course number from FileMaker' }),
+  start: z.string()
+    .min(1, { message: 'Please choose a start date' }),
+  end: z.string()
+    .min(1, { message: 'Please choose a end date' }),
+  max: z.coerce
+    .number()
+    .min(1, { message: 'Please enter a maximum hours that greater than 0' }),
+  status: z.enum(['disabled', 'active'], {
+      invalid_type_error: 'Please select a course status.',
+    }),
+});
+
+export type CourseFormState = {
+  errors?: {
+    name?: string[];
+    number?: string[];
+    start?: string[];
+    end?: string[];
+    max?: string[];
+    status?: string[];
+  };
+  message?: string | null;
+};
+
+const CreateCourse = CourseFormSchema.omit({ id: true});
+
+export async function createCourse(prevState: CourseFormState, formData: FormData) {
+  // Validate form using Zod
+  const validatedFields = CreateCourse.safeParse({
+    name: formData.get('name'),
+    number: formData.get('number'),
+    start: formData.get('start'),
+    end: formData.get('end'),
+    max: formData.get('max'),
+    status: formData.get('status'),
+  });
+
+  // If form validation fails, return errors early. Otherwise, continue.
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Course.',
+    };
+  }
+
+  // Prepare data for insertion into the database
+  const { name, number, start, end, max, status } = validatedFields.data;
+  console.log(validatedFields.data);
+  // Insert data into the database
+  try {
+    await sql`
+      INSERT INTO courses (name, course_number, start_date, end_date, max_hours, status)
+      VALUES (${name}, ${number}, ${start}, ${end}, ${max}, ${status})
+    `;
+    console.log('inserted');
+  } catch {
+    // If a database error occurs, return a more specific error.
+    return {
+      message: 'Database Error: Failed to Create Invoice.',
+    };
+  }
+
+  // Revalidate the cache for the invoices page and redirect the user.
+  revalidatePath('/admin/courses ');
+  redirect('/admin/courses ');
+}
+
+const UpdateCourse = CourseFormSchema.omit({ id: true });
+
+export async function updateCourse(id: string, formData: FormData) {
+  const  { name, number, start, end, max, status } = UpdateCourse.parse({
+    name: formData.get('name'),
+    number: formData.get('number'),
+    start: formData.get('start'),
+    end: formData.get('end'),
+    max: formData.get('max'),
+    status: formData.get('status'),
+  });
+
+  try {
+    await sql`
+        UPDATE courses
+        SET name = ${name}, number = ${number}, start = ${start}, end = ${end}, max = ${max}, status = ${status}
+        WHERE id = ${id}
+      `;
+  } catch {
+    return { message: 'Database Error: Failed to Update Course.' };
+  }
+
+  revalidatePath('/admin/courses');
+  redirect('/admin/courses');
+}
+
+export async function deleteCourse(id: string) {
+  try {
+    await sql`DELETE FROM courses WHERE id = ${id}`;
+    revalidatePath('/admin/courses');
+    return { message: 'Deleted Course.' };
+  } catch {
+    return { message: 'Database Error: Failed to Delete Course.' };
   }
 }

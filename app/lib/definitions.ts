@@ -87,3 +87,13 @@ export type InvoiceForm = {
   amount: number;
   status: 'pending' | 'paid';
 };
+
+export type Course = {
+  id: string;
+  name: string;
+  course_number: number;
+  start_date: string;
+  end_date: string;
+  max_hours: number;
+  status: 'active' | 'disabled';
+}

@@ -6,6 +6,7 @@ import {
   InvoicesTable,
   LatestInvoiceRaw,
   Revenue,
+  Course
 } from './definitions';
 import { formatCurrency } from './utils';
 
@@ -203,5 +204,26 @@ export async function fetchFilteredCustomers(query: string) {
   } catch (err) {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
+  }
+}
+
+export async function fetchFilteredCourses(
+  query: string,
+  currentPage: number,
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  try {
+    const courses = await sql<Course>`
+      SELECT * FROM courses WHERE
+        courses.name ILIKE ${`%${query}%`}
+      ORDER BY courses.name DESC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+
+    return courses.rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch courses.');
   }
 }

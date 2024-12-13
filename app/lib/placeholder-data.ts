@@ -145,4 +145,34 @@ const revenue = [
   { month: 'Dec', revenue: 4800 },
 ];
 
-export { users, customers, invoices, revenue };
+const courses = [
+  {
+    id: 'c6f08836-edfb-4658-9e08-1871318cdf52',
+    name: 'EN-FCM (24-25)',
+    course_number: '170',
+    start_date: '2024-09-06',
+    end_date: '2025-09-07',
+    max_hours: 60,
+    status: 'active',
+  },
+  {
+    id: 'f28d044b-74a8-4b0d-b684-fa3c05880bbc',
+    name: 'EN-ACU-1 (24-25)',
+    course_number: '171',
+    start_date: '2024-09-12',
+    end_date: '2025-09-13',
+    max_hours: 40,
+    status: 'active',
+  },
+  {
+    id: '203bf86b-ee3b-4b4e-bbc5-9f6687c6e465',
+    name: 'CN-FCM (24-25)',
+    course_number: '172',
+    start_date: '2024-09-22',
+    end_date: '2025-08-07',
+    max_hours: 34,
+    status: 'disabled',
+  }
+]
+
+export { users, customers, invoices, revenue, courses };
