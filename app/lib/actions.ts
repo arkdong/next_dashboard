@@ -216,13 +216,14 @@ export async function updateCourse(id: string, formData: FormData) {
     max: formData.get('max'),
     status: formData.get('status'),
   });
-
+  console.log(name, number, start, end, max, status);
   try {
     await sql`
         UPDATE courses
-        SET name = ${name}, number = ${number}, start = ${start}, end = ${end}, max = ${max}, status = ${status}
+        SET name = ${name}, course_number = ${number}, start_date = ${start}, end_date = ${end}, max_hours = ${max}, status = ${status}
         WHERE id = ${id}
       `;
+      console.log('updated');
   } catch {
     return { message: 'Database Error: Failed to Update Course.' };
   }

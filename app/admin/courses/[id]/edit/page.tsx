@@ -1,32 +1,29 @@
-import Form from '@/app/ui/invoices/edit-form';
+import EditCourseForm from '@/app/ui/courses/edit-form';
 import Breadcrumbs from '@/app/ui/breadcrumbs';
-import { fetchCustomers, fetchInvoiceById } from '@/app/lib/data';
+import { fetchCourseById } from '@/app/lib/data';
 import { notFound } from 'next/navigation';
 
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
     const id = params.id;
-    const [invoice, customers] = await Promise.all([
-        fetchInvoiceById(id),
-        fetchCustomers(),
-    ]);
-    if (!invoice) {
+    const course = await fetchCourseById(id);
+    if (!course) {
         notFound();
     }
     return (
         <main>
         <Breadcrumbs
             breadcrumbs={[
-            { label: 'Invoices', href: '/dashboard/invoices' },
+            { label: 'Courses', href: '/dashboard/courses' },
             {
-                label: 'Edit Invoice',
-                href: `/dashboard/invoices/${id}/edit`,
+                label: 'Edit Course',
+                href: `/dashboard/courses/${id}/edit`,
                 active: true,
             },
             ]}
         />
-        <Form invoice={invoice} customers={customers} />
+        <EditCourseForm course={course} />
         </main>
     );
 }

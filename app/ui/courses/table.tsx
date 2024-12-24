@@ -1,4 +1,4 @@
-import { UpdateInvoice, DeleteInvoice } from '@/app/ui/invoices/buttons'; //TODO: Import the user buttons
+import { UpdateCourse, DeleteCourse } from '@/app/ui/courses/buttons';
 import { formatDateToLocal } from '@/app/lib/utils';
 import { fetchFilteredCourses } from '@/app/lib/data';
 import CourseStatus from '@/app/ui/courses/status';
@@ -108,8 +108,8 @@ export default async function InvoicesTable({
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
-                      <UpdateInvoice id={course.id} />
-                      <DeleteInvoice id={course.id} />
+                      <UpdateCourse id={course.id} />
+                      <DeleteCourse id={course.id} />
                     </div>
                   </td>
                 </tr>

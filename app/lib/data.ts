@@ -207,6 +207,8 @@ export async function fetchFilteredCustomers(query: string) {
   }
 }
 
+
+// Filtered Courses for Course Page
 export async function fetchFilteredCourses(
   query: string,
   currentPage: number,
@@ -225,5 +227,24 @@ export async function fetchFilteredCourses(
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch courses.');
+  }
+}
+
+// Course by id for Edit Course Page
+export async function fetchCourseById(id: string) {
+  try {
+    const data = await sql<Course>`
+      SELECT * FROM courses WHERE courses.id = ${id};
+    `;
+
+    const course = data.rows.map((course) => ({
+      ...course,
+      // Convert amount from cents to dollars
+    }));
+    console.log(course); // course is an empty array []
+    return course[0];
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch course.');
   }
 }
