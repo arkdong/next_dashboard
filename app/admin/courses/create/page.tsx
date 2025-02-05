@@ -1,5 +1,10 @@
 import Form from '@/app/ui/courses/create-form';
 import Breadcrumbs from '@/app/ui/breadcrumbs';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Create Course',
+};
 
 export default async function Page() {
   return (

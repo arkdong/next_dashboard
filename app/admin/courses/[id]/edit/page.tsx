@@ -2,7 +2,11 @@ import EditCourseForm from '@/app/ui/courses/edit-form';
 import Breadcrumbs from '@/app/ui/breadcrumbs';
 import { fetchCourseById } from '@/app/lib/data';
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 
+export const metadata: Metadata = {
+    title: 'Edit Course',
+};
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;

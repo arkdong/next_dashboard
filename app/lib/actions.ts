@@ -268,32 +268,32 @@ export async function createCourse(state: CourseFormState, payload: FormData) {
   redirect('/admin/courses ');
 }
 
-const UpdateCourse = BaseCourseFormSchema.omit({ id: true });
+// const UpdateCourse = BaseCourseFormSchema.omit({ id: true });
 
-export async function updateCourse(id: string, formData: FormData) {
-  const  { name, number, start, end, max, status } = UpdateCourse.parse({
-    name: formData.get('name'),
-    number: formData.get('number'),
-    start: formData.get('start'),
-    end: formData.get('end'),
-    max: formData.get('max'),
-    status: formData.get('status'),
-  });
-  console.log(name, number, start, end, max, status);
-  try {
-    await sql`
-        UPDATE courses
-        SET name = ${name}, course_number = ${number}, start_date = ${start}, end_date = ${end}, max_hours = ${max}, status = ${status}
-        WHERE id = ${id}
-      `;
-      console.log('updated');
-  } catch {
-    return { message: 'Database Error: Failed to Update Course.' };
-  }
+// export async function updateCourse(id: string, formData: FormData) {
+//   const  { name, number, start, end, max, status } = UpdateCourse.parse({
+//     name: formData.get('name'),
+//     number: formData.get('number'),
+//     start: formData.get('start'),
+//     end: formData.get('end'),
+//     max: formData.get('max'),
+//     status: formData.get('status'),
+//   });
+//   console.log(name, number, start, end, max, status);
+//   try {
+//     await sql`
+//         UPDATE courses
+//         SET name = ${name}, course_number = ${number}, start_date = ${start}, end_date = ${end}, max_hours = ${max}, status = ${status}
+//         WHERE id = ${id}
+//       `;
+//       console.log('updated');
+//   } catch {
+//     return { message: 'Database Error: Failed to Update Course.' };
+//   }
 
-  revalidatePath('/admin/courses');
-  redirect('/admin/courses');
-}
+//   revalidatePath('/admin/courses');
+//   redirect('/admin/courses');
+// }
 
 export async function deleteCourse(id: string) {
   try {
@@ -303,4 +303,114 @@ export async function deleteCourse(id: string) {
   } catch {
     return { message: 'Database Error: Failed to Delete Course.' };
   }
+}
+
+const BaseCourseEditSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, { message: 'Please enter a course name' }),
+  number: z.coerce
+    .number()
+    .min(1, { message: 'Please enter a course number from FileMaker' }),
+  start: z.string().min(1, { message: 'Please choose a start date' }),
+  end: z.string().min(1, { message: 'Please choose a end date' }),
+  max: z.coerce
+    .number()
+    .min(1, { message: 'Please enter a maximum hours that is greater than 0' }),
+  status: z.enum(['disabled', 'active'], {
+    invalid_type_error: 'Please select a course status.',
+  }),
+});
+
+const EditCourse = withDateCheck(BaseCourseEditSchema);
+
+// ------------------------------------
+// 6) Updated "updateCourse" action
+// ------------------------------------
+export async function updateCourse(state: CourseFormState, payload: FormData) {
+  // 1) Extract all fields (including ID)
+  const id     = getString(payload, 'id');
+  const name   = getString(payload, 'name');
+  const number = getString(payload, 'number');
+  const start  = getString(payload, 'start');
+  const end    = getString(payload, 'end');
+  const max    = getString(payload, 'max');
+  const status = getString(payload, 'status');
+
+  // 2) Validate with our EditCourse schema (includes date-check)
+  const validatedFields = EditCourse.safeParse({
+    id,
+    name,
+    number,
+    start,
+    end,
+    max,
+    status,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      data: { id, name, number, start, end, max, status },
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing or invalid fields. Failed to update course.',
+    };
+  }
+
+  // 3) Check for duplicates in "name" or "number",
+  //    ignoring the current record's ID so we don’t fail
+  //    if the record itself has the same name/number
+  try {
+    // Check if name exists in another record
+    const existingName = await sql`
+      SELECT id FROM courses
+      WHERE name = ${name} AND id <> ${id}
+      LIMIT 1
+    `;
+
+    // Check if number exists in another record
+    const existingNumber = await sql`
+      SELECT id FROM courses
+      WHERE course_number = ${Number(number)} AND id <> ${id}
+      LIMIT 1
+    `;
+
+    const errors: Record<string, string[]> = {};
+
+    if ((existingName?.rowCount ?? 0) > 0) {
+      errors.name = ['A course with that name already exists.'];
+    }
+    if ((existingNumber?.rowCount ?? 0) > 0) {
+      errors.number = ['A course with that number already exists.'];
+    }
+
+    // If either is duplicated, return early
+    if (Object.keys(errors).length > 0) {
+      return {
+        data: { id, name, number, start, end, max, status },
+        errors,
+        message: 'Cannot update course due to duplicate fields.',
+      };
+    }
+
+    // 4) If no duplicates, perform update
+    await sql`
+      UPDATE courses
+      SET
+        name = ${name},
+        course_number = ${Number(number)},
+        start_date = ${start},
+        end_date = ${end},
+        max_hours = ${Number(max)},
+        status = ${status}
+      WHERE id = ${id}
+    `;
+  } catch (err) {
+    return {
+      data: { id, name, number, start, end, max, status },
+      message: 'Database Error: Failed to update course.',
+    };
+  }
+
+  // 5) Success: revalidate & redirect
+  revalidatePath('/admin/courses');
+  redirect('/admin/courses');
 }
