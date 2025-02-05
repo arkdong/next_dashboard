@@ -13,12 +13,21 @@ import { createCourse, CourseFormState } from '@/app/lib/actions';
 import { useActionState } from 'react';
 
 export default function Form() {
-  const initialState: CourseFormState = {
-    message: null,
-    errors: {},
-    data: {}  // Make sure data is at least an empty object
+  const initialState = {
+    data: {
+      name: '',
+      number: '',
+      start: '',
+      end: '',
+      max: '',
+      status: ''
+    },
+    errors: {} as { [key: string]: string[] },
+    message: ''
   };
+
   const [state, formAction] = useActionState(createCourse, initialState);
+
   return (
     <form action={formAction}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
@@ -32,7 +41,7 @@ export default function Form() {
               <input
                 id="name"
                 name="name"
-                type="string"
+                type="text"
                 defaultValue={state.data?.name ?? ''}
                 placeholder="Enter course name"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"

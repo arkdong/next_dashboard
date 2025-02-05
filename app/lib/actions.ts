@@ -178,7 +178,7 @@ export type CourseFormState = {
     max?: string[];
     status?: string[];
   };
-  message?: string | null;
+  message?: string;
   // Add a place to store the user-entered data from the server
   data?: {
     name?: string;
@@ -196,25 +196,19 @@ function getString(formData: FormData, key: string): string {
   return typeof value === 'string' ? value : ''
 }
 
-export async function createCourse(prevState: CourseFormState, formData: FormData) {
+export async function createCourse(state: CourseFormState, payload: FormData) {
   // Validate form using Zod
-  const validatedFields = CreateCourse.safeParse({
-    name: formData.get('name'),
-    number: formData.get('number'),
-    start: formData.get('start'),
-    end: formData.get('end'),
-    max: formData.get('max'),
-    status: formData.get('status'),
-  });
-
+  const name   = getString(payload, 'name')
+  const number = getString(payload, 'number')
+  const start  = getString(payload, 'start')
+  const end    = getString(payload, 'end')
+  const max    = getString(payload, 'max')
+  const status = getString(payload, 'status')
+  const validatedFields = CreateCourse.safeParse({ name, number, start, end, max, status });
+  // Convert formData to strings/numbers
   // If form validation fails, return errors early. Otherwise, continue.
   if (!validatedFields.success) {
-    const name   = getString(formData, 'name')
-    const number = getString(formData, 'number')
-    const start  = getString(formData, 'start')
-    const end    = getString(formData, 'end')
-    const max    = getString(formData, 'max')
-    const status = getString(formData, 'status')
+
     return {
       // Return the raw form data so you can re-populate fields
       data: {name, number, start, end, max, status},
@@ -223,11 +217,40 @@ export async function createCourse(prevState: CourseFormState, formData: FormDat
     };
   }
 
-  // Prepare data for insertion into the database
-  const { name, number, start, end, max, status } = validatedFields.data;
-  console.log(validatedFields.data);
   // Insert data into the database
   try {
+    // Check if name exists
+    const existingName = await sql`
+      SELECT id FROM courses
+      WHERE name = ${name}
+      LIMIT 1
+    `;
+
+    // Check if number exists
+    const existingNumber = await sql`
+      SELECT id FROM courses
+      WHERE course_number = ${number}
+      LIMIT 1
+    `;
+
+      // 5) Build error object based on which is duplicated
+    const errors: Record<string, string[]> = {};
+
+    if ((existingName?.rowCount ?? 0) > 0) {
+      errors.name = ['A course with that name already exists.'];
+    }
+    if ((existingNumber?.rowCount ?? 0) > 0) {
+      errors.number = ['A course with that number already exists.'];
+    }
+
+        // If either is duplicated, return early
+    if (Object.keys(errors).length > 0) {
+      return {
+        data: {name, number, start, end, max, status},
+        errors,
+        message: 'Cannot create course due to duplicate fields.',
+      };
+    }
     await sql`
       INSERT INTO courses (name, course_number, start_date, end_date, max_hours, status)
       VALUES (${name}, ${number}, ${start}, ${end}, ${max}, ${status})
