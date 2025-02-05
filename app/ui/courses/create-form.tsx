@@ -13,7 +13,11 @@ import { createCourse, CourseFormState } from '@/app/lib/actions';
 import { useActionState } from 'react';
 
 export default function Form() {
-  const initialState: CourseFormState = { message: null, errors: {} };
+  const initialState: CourseFormState = {
+    message: null,
+    errors: {},
+    data: {}  // Make sure data is at least an empty object
+  };
   const [state, formAction] = useActionState(createCourse, initialState);
   return (
     <form action={formAction}>
@@ -29,6 +33,7 @@ export default function Form() {
                 id="name"
                 name="name"
                 type="string"
+                defaultValue={state.data?.name ?? ''}
                 placeholder="Enter course name"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                 aria-describedby="name-error"
@@ -58,6 +63,7 @@ export default function Form() {
                 name="number"
                 type="number"
                 step="0.01"
+                defaultValue={state.data?.number ?? ''}
                 placeholder="Enter course number same as in FileMaker"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                 aria-describedby="number-error"
@@ -86,6 +92,7 @@ export default function Form() {
                 id="start"
                 name="start"
                 type="date"
+                defaultValue={state.data?.start ?? ''}
                 placeholder="Enter course start date"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                 aria-describedby="start-error"
@@ -114,6 +121,7 @@ export default function Form() {
                 id="end"
                 name="end"
                 type="date"
+                defaultValue={state.data?.end ?? ''}
                 placeholder="Enter course end date"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                 aria-describedby="end-error"
@@ -142,6 +150,7 @@ export default function Form() {
                 id="max"
                 name="max"
                 type="number"
+                defaultValue={state.data?.max ?? ''}
                 step="0.01"
                 placeholder="Enter the maximum hours for the course"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
@@ -173,6 +182,7 @@ export default function Form() {
                   name="status"
                   type="radio"
                   value="disabled"
+                  defaultChecked={state.data?.status === 'disabled'}
                   className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
                 />
                 <label
@@ -188,6 +198,7 @@ export default function Form() {
                   name="status"
                   type="radio"
                   value="active"
+                  defaultChecked={state.data?.status === 'active'}
                   className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
                   aria-describedby="status-error"
                 />

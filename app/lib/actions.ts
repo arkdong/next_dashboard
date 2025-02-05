@@ -131,16 +131,19 @@ export async function authenticate(
   }
 }
 
-const CourseFormSchema = z.object({
+const BaseCourseFormSchema = z.object({
   id: z.string(),
-  name: z.string()
+  name: z
+    .string()
     .min(1, { message: 'Please enter a course name' }),
   number: z.coerce
     .number()
     .min(1, { message: 'Please enter a course number from FileMaker' }),
-  start: z.string()
+  start: z
+    .string()
     .min(1, { message: 'Please choose a start date' }),
-  end: z.string()
+  end: z
+    .string()
     .min(1, { message: 'Please choose a end date' }),
   max: z.coerce
     .number()
@@ -148,7 +151,23 @@ const CourseFormSchema = z.object({
   status: z.enum(['disabled', 'active'], {
       invalid_type_error: 'Please select a course status.',
     }),
-});
+  });
+
+function withDateCheck<T extends z.ZodType<any>>(schema: T) {
+  return schema.refine(
+    (data: any) => {
+      const startDate = new Date(data.start);
+      const endDate = new Date(data.end);
+      return endDate >= startDate;
+    },
+    {
+      message: 'End date cannot be earlier than the start date.',
+      path: ['end'],
+    }
+  );
+}
+
+const CreateCourse = withDateCheck(BaseCourseFormSchema.omit({ id: true}));
 
 export type CourseFormState = {
   errors?: {
@@ -160,9 +179,22 @@ export type CourseFormState = {
     status?: string[];
   };
   message?: string | null;
+  // Add a place to store the user-entered data from the server
+  data?: {
+    name?: string;
+    number?: string;
+    start?: string;
+    end?: string;
+    max?: string;
+    status?: string;
+  };
 };
 
-const CreateCourse = CourseFormSchema.omit({ id: true});
+// Helper function to safely get a string from FormData
+function getString(formData: FormData, key: string): string {
+  const value = formData.get(key)
+  return typeof value === 'string' ? value : ''
+}
 
 export async function createCourse(prevState: CourseFormState, formData: FormData) {
   // Validate form using Zod
@@ -177,7 +209,15 @@ export async function createCourse(prevState: CourseFormState, formData: FormDat
 
   // If form validation fails, return errors early. Otherwise, continue.
   if (!validatedFields.success) {
+    const name   = getString(formData, 'name')
+    const number = getString(formData, 'number')
+    const start  = getString(formData, 'start')
+    const end    = getString(formData, 'end')
+    const max    = getString(formData, 'max')
+    const status = getString(formData, 'status')
     return {
+      // Return the raw form data so you can re-populate fields
+      data: {name, number, start, end, max, status},
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Missing Fields. Failed to Create Course.',
     };
@@ -205,7 +245,7 @@ export async function createCourse(prevState: CourseFormState, formData: FormDat
   redirect('/admin/courses ');
 }
 
-const UpdateCourse = CourseFormSchema.omit({ id: true });
+const UpdateCourse = BaseCourseFormSchema.omit({ id: true });
 
 export async function updateCourse(id: string, formData: FormData) {
   const  { name, number, start, end, max, status } = UpdateCourse.parse({
